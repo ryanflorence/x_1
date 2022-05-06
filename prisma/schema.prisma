@@ -36,3 +36,20 @@ model Note {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   userId String
 }
+
+model Doc {
+  id       String       @id @default(cuid())
+  name     String
+  markdown String
+  lang     String
+  html     String
+  ref      DocGithubRef @relation(fields: [refId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  refId    String
+}
+
+model DocGithubRef {
+  id      String  @id
+  status  String
+  lastDoc String?
+  docs    Doc[]
+}

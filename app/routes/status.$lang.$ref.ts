@@ -1,5 +1,4 @@
-import { LoaderFunction, redirect } from "remix";
-import { json } from "remix";
+import { json, LoaderFunction, redirect } from "@remix-run/node";
 import invariant from "tiny-invariant";
 import { getDocRef } from "~/models/docs.server";
 

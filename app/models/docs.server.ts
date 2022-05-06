@@ -1,108 +1,107 @@
-import arc from "@architect/functions";
+import type { Doc, DocGithubRef } from "@prisma/client";
 import { getRepoTarballStream } from "./github.server";
 import { createTarFileProcessor } from "./tar.server";
 import { processMarkdown } from "@ryanflorence/md";
 // @ts-expect-error
 import sortBy from "sort-by";
+import { prisma } from "~/db.server";
 
-export interface Doc {
-  pk: string;
-  sk: string;
-  name: string;
-  markdown: string;
-  ref: string;
-  lang: string;
-  html?: string;
-  parentPk?: string;
-}
+export type MenuDoc = Pick<Doc, "id" | "name"> & { slug: string };
 
-export interface DocRef {
-  pk: string;
-  status: "seeding" | "failed" | "complete";
-  lastDoc?: string;
-}
-
-type MenuDoc = Pick<Doc, "pk" | "name"> & { slug: string };
-
-export async function getMenu(ref: string, lang: string): Promise<MenuDoc[]> {
-  let db = await arc.tables();
-  let result = await db.doc.query({
-    KeyConditionExpression: "pk = :pk",
-    ExpressionAttributeValues: { ":pk": ref },
+export async function getMenu(refId: string, lang: string): Promise<MenuDoc[]> {
+  let docs = await prisma.doc.findMany({
+    where: {
+      refId: refId,
+      lang: lang,
+    },
   });
-  return result.Items.map((item: any) => ({
-    sk: item.sk,
-    name: item.name,
-    // just want the "slug" part of this: {ref}#docs/{slug}.md
-    // should use `match`, I'm too tired.
-    slug: item.sk.match(/docs\/(.+)\.md/)[1],
-  })).sort(sortBy("slug"));
+
+  return docs
+    .map((doc) => ({
+      id: doc.id,
+      name: doc.name,
+      slug: getDocSlug(doc.name),
+    }))
+    .sort(sortBy("slug"));
 }
 
-export async function getDoc(
-  ref: string,
-  slug: string
-): Promise<Doc | undefined> {
-  let db = await arc.tables();
-  let sk = makeDocId(ref, `docs/${slug}.md`);
-  let pk = ref;
-  let result = await db.doc.get({ pk, sk });
-  return result;
+/**
+ * Removes the extension from markdown file names
+ */
+function getDocSlug(docName: string): string {
+  return docName.replace(/^docs\//, "").replace(/\.md$/, "");
 }
 
-let makeDocId = (ref: string, filename: string) => `${ref}#${filename}`;
-
-export async function getDocRef(ref: string): Promise<DocRef> {
-  let db = await arc.tables();
-  return db.docRef.get({ pk: ref });
+export async function getDoc(refId: string, slug: string): Promise<Doc | null> {
+  let name = `docs/${slug}.md`;
+  return prisma.doc.findFirst({
+    where: {
+      refId: refId,
+      name: name,
+    },
+  });
 }
 
-export async function addGitHubRefToDB(ref: string): Promise<void> {
-  let db = await arc.tables();
+export async function getDocRef(ref: string): Promise<DocGithubRef | null> {
+  return prisma.docGithubRef.findFirst({ where: { id: ref } });
+}
 
-  let docRef = await db.docRef.get({ pk: ref });
+export async function addGitHubRefToDB(refId: string): Promise<void> {
+  let docRef = await getDocRef(refId);
 
   // already seeding
-  if (docRef && docRef.status === "seeding") {
+  if (docRef?.status === "seeding") {
     return;
   }
 
-  db.docRef.put({ pk: ref, status: "seeding" } as DocRef);
-  let stream = await getRepoTarballStream(ref);
+  // mark as seeding in case other requests come in for this one at the same
+  // time so we don't seed it multiple times
+  await prisma.docGithubRef.create({
+    data: {
+      id: refId,
+      status: "seeding",
+    },
+  });
+
+  let stream = await getRepoTarballStream(refId);
   let processFiles = createTarFileProcessor(stream);
+
   await processFiles(async ({ filename, content }) => {
-    // # TODO make a function for this
     console.log(`Processing markdown: ${filename}`);
-    let pk = ref;
-    let sk = makeDocId(ref, filename);
     let html = await processMarkdown(content);
-    let name = pk; // TODO: use frontmatter
-    let doc: Doc = {
-      pk,
-      sk,
-      lang: "en",
-      markdown: content,
-      name,
-      html: html,
-      parentPk: "",
-      ref,
-    };
 
     try {
-      console.log(`Writing to dynamo: ${filename}`);
-      let result = await db.doc.put(doc);
-      console.log(`✅ processed ${result.pk}`);
-      db.docRef.put({
-        pk: ref,
-        status: "seeding",
-        lastDoc: filename,
-      } as DocRef);
+      console.log(`Writing to database: ${filename}`);
+      let result = await prisma.doc.create({
+        data: {
+          lang: "en",
+          markdown: content,
+          name: filename,
+          html: html,
+          refId: refId,
+        },
+      });
+      console.log(`✅ processed ${result.name}`);
+
+      prisma.docGithubRef.update({
+        where: { id: refId },
+        data: { lastDoc: result.id },
+      });
     } catch (e) {
       console.error(`🚫 failed ${filename}`);
       console.error(e);
-      db.docRef.put({ pk: ref, status: "failed" } as DocRef);
+      // TODO: what happens if somebody comes later after a failed attempt? (or
+      // the user simply hits refresh after a failure, ofc)
+      prisma.docGithubRef.update({
+        where: { id: refId },
+        data: { status: "failed" },
+      });
       throw e;
     }
   });
-  await db.docRef.put({ pk: ref, status: "complete" } as DocRef);
+
+  await prisma.docGithubRef.update({
+    where: { id: refId },
+    data: { status: "complete" },
+  });
 }

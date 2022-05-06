@@ -1,22 +1,27 @@
 import React from "react";
+import { json } from "@remix-run/node";
+import type { LoaderFunction } from "@remix-run/node";
 import {
-  LoaderFunction,
-  Outlet,
-  useLoaderData,
-  json,
   Link,
+  Outlet,
   useFetcher,
+  useLoaderData,
   useLocation,
   useParams,
-} from "remix";
+} from "@remix-run/react";
 import invariant from "tiny-invariant";
 import * as Docs from "~/models/docs.server";
-import styles from "../styles/docs.css";
+import styles from "~/styles/docs.css";
 
-type LoaderData = {
-  menu: Awaited<ReturnType<typeof Docs.getMenu>>;
-  seeding: boolean;
-};
+type LoaderData =
+  | {
+      menu: Docs.MenuDoc[];
+      seeding: false;
+    }
+  | {
+      menu: null;
+      seeding: true;
+    };
 
 export function links() {
   return [{ rel: "stylesheet", href: styles }];
@@ -24,14 +29,20 @@ export function links() {
 
 export let loader: LoaderFunction = async ({ params, request }) => {
   let { lang, ref } = params;
+
   invariant(lang, "expected `params.lang`");
   invariant(ref, "expected `params.ref`");
+
   let menu = await Docs.getMenu(ref, lang);
+
   let needsToSeed = menu.length === 0;
+
   if (needsToSeed) {
     Docs.addGitHubRefToDB(ref);
+    return json<LoaderData>({ seeding: true, menu: null });
+  } else {
+    return json<LoaderData>({ seeding: false, menu });
   }
-  return json<LoaderData>({ seeding: needsToSeed, menu });
 };
 
 export default function Doc() {
