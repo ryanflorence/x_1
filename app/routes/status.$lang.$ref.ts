@@ -15,7 +15,7 @@ export let loader: LoaderFunction = async ({ params, request }) => {
   }
 
   let docRef = await getDocRef(params.ref);
-  if (docRef.status === "complete") {
+  if (docRef?.status === "complete") {
     return redirect(refreshUrl);
   }
 
