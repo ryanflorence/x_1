@@ -13,18 +13,18 @@ import invariant from "tiny-invariant";
 import * as Docs from "~/models/docs.server";
 import styles from "~/styles/docs.css";
 
-type LoaderData =
-  | {
-      menu: Docs.MenuDoc[];
-      seeding: false;
-    }
-  | {
-      menu: null;
-      seeding: true;
-    };
+type LoaderData = {
+  menu: Docs.MenuDoc[];
+};
 
 export function links() {
   return [{ rel: "stylesheet", href: styles }];
+}
+
+export function headers() {
+  return {
+    "Cache-Control": "max-age=300",
+  };
 }
 
 export let loader: LoaderFunction = async ({ params, request }) => {
@@ -34,23 +34,13 @@ export let loader: LoaderFunction = async ({ params, request }) => {
   invariant(ref, "expected `params.ref`");
 
   let menu = await Docs.getMenu(ref, lang);
-
-  let needsToSeed = menu.length === 0;
-
-  if (needsToSeed) {
-    Docs.addGitHubRefToDB(ref);
-    return json<LoaderData>({ seeding: true, menu: null });
-  } else {
-    return json<LoaderData>({ seeding: false, menu });
-  }
+  return json<LoaderData>({ menu }, {});
 };
 
 export default function Doc() {
   let data = useLoaderData<LoaderData>();
 
-  return data.seeding ? (
-    <Seeding />
-  ) : (
+  return (
     <div className="flex">
       <div className="w-80 flex-shrink-0 px-8">
         <div className="sticky top-0 py-8">
@@ -58,9 +48,13 @@ export default function Doc() {
           <ul>
             {data.menu.map((doc, index) => (
               <li key={index}>
-                <Link className="block py-2 text-blue-500" to={doc.slug}>
-                  {doc.slug}
-                </Link>
+                {doc.hasContent ? (
+                  <Link className="block py-2 text-blue-500" to={doc.slug}>
+                    {doc.attrs.title}
+                  </Link>
+                ) : (
+                  <span className="block">{doc.attrs.title}</span>
+                )}
               </li>
             ))}
           </ul>
