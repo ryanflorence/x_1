@@ -23,6 +23,7 @@ export interface Doc extends Omit<MenuDoc, "hasContent"> {
 
 declare global {
   var menuCache: LRUCache<string, MenuDoc[]>;
+  var docCache: LRUCache<string, Doc>;
 }
 
 let menuCache =
@@ -68,16 +69,40 @@ function parseAttrs(md: string, filename: string) {
   };
 }
 
+/**
+ * While we're using HTTP caching, we have this memory cache too so that
+ * document requests and data request to the same document can do less work for
+ * new versions. This makes our origin server very fast, but adding HTTP caching
+ * let's have simpler and faster deployments with just one origin server, but
+ * still distribute the documents across the CDN.
+ */
+let docCache =
+  // we need a better hot reload story here
+  global.docCache ||
+  (global.docCache = new LRUCache<string, Doc>({
+    max: 500, // store up to 500 docs across all versions
+  }));
+
 export async function getDoc(ref: string, slug: string): Promise<Doc | null> {
   let docFilename = `docs/${slug}.md`;
+
+  let cacheKey = `${ref}:${docFilename}`;
+  let cached = docCache.get(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
   let md = await getRepoContent(ref, docFilename);
   let { content, attrs } = parseAttrs(md, docFilename);
-  return {
+  let doc = {
     attrs,
     filename: docFilename,
     html: await processMarkdown(content),
     slug,
   };
+
+  docCache.set(cacheKey, doc);
+  return doc;
 }
 
 /**
