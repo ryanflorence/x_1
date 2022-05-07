@@ -9,8 +9,16 @@ export let loader: LoaderFunction = async ({ params }) => {
   invariant(params["*"], "expected splat param");
   let doc = await getDoc(params.ref, params["*"]);
   if (!doc) throw new Response("", { status: 404 });
-  return json(doc, { headers: { "Cache-Control": "max-age=60" } });
+  return json(doc, {
+    headers: { "Cache-Control": "max-age=60, stale-while-revalidate=3600" },
+  });
 };
+
+export function headers() {
+  return {
+    "Cache-Control": "max-age=60, stale-while-revalidate=3600",
+  };
+}
 
 export default function Doc() {
   let doc = useLoaderData();
