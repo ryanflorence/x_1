@@ -68,7 +68,8 @@ export async function addGitHubRefToDB(refId: string): Promise<void> {
 
   await processFiles(async ({ filename, content }) => {
     console.log(`Processing markdown: ${filename}`);
-    let html = await processMarkdown(content);
+    // let html = await processMarkdown(content);
+    let html = "";
 
     try {
       console.log(`Writing to database: ${filename}`);
