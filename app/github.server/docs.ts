@@ -1,4 +1,5 @@
-import { getRepoContent, getRepoTarballStream } from "./github.server";
+import { getRepoContent } from "./repo-content";
+import { getRepoTarballStream } from "./repo-tarball";
 import { createTarFileProcessor } from "./tar.server";
 import { processMarkdown } from "@ryanflorence/md";
 import LRUCache from "lru-cache";
@@ -23,7 +24,7 @@ export interface Doc extends Omit<MenuDoc, "hasContent"> {
 
 declare global {
   var menuCache: LRUCache<string, MenuDoc[]>;
-  var docCache: LRUCache<string, Doc>;
+  var cache: LRUCache<string, Doc>;
 }
 
 let menuCache =
@@ -33,14 +34,18 @@ let menuCache =
     max: 30, // store up to 30 versions
   }));
 
-export async function getMenu(refId: string, lang: string): Promise<MenuDoc[]> {
+export async function getMenu(
+  repo: string,
+  refId: string,
+  lang: string
+): Promise<MenuDoc[]> {
   let cacheKey = `${refId}:${lang}`;
   let cached = menuCache.get(cacheKey);
   if (cached) return cached;
 
   let menu: MenuDoc[] = [];
 
-  let stream = await getRepoTarballStream(refId);
+  let stream = await getRepoTarballStream(repo, refId);
   let processFiles = createTarFileProcessor(stream);
   await processFiles(async ({ filename, content }) => {
     let { attrs, content: md } = parseAttrs(content, filename);
@@ -78,30 +83,28 @@ function parseAttrs(md: string, filename: string) {
  */
 let docCache =
   // we need a better hot reload story here
-  global.docCache ||
-  (global.docCache = new LRUCache<string, Doc>({
-    max: 500, // store up to 500 docs across all versions
+  global.cache ||
+  (global.cache = new LRUCache<string, Doc>({
+    max: 500,
+    ttl: 300,
+    allowStale: true,
+    fetchMethod: async (key) => {
+      let [repo, ref, slug] = key.split(":");
+      let filename = `docs/${slug}.md`;
+      let md = await getRepoContent(repo, ref, filename);
+      let { content, attrs } = parseAttrs(md, filename);
+      let html = await processMarkdown(content);
+      return { attrs, filename, html, slug };
+    },
   }));
 
-export async function getDoc(ref: string, slug: string): Promise<Doc | null> {
-  let docFilename = `docs/${slug}.md`;
-
-  let cacheKey = `${ref}:${docFilename}`;
-  let cached = docCache.get(cacheKey);
-  if (cached) {
-    return cached;
-  }
-
-  let md = await getRepoContent(ref, docFilename);
-  let { content, attrs } = parseAttrs(md, docFilename);
-  let doc = {
-    attrs,
-    filename: docFilename,
-    html: await processMarkdown(content),
-    slug,
-  };
-
-  docCache.set(cacheKey, doc);
+export async function getDoc(
+  repo: string,
+  ref: string,
+  slug: string
+): Promise<Doc | undefined> {
+  let key = `${repo}:${ref}:${slug}`;
+  let doc = await docCache.fetch(key);
   return doc;
 }
 

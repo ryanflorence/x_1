@@ -334,6 +334,7 @@ a.md-nav-item:hover {
   line-height: 24px;
   line-height: 1.5;
   min-width: 0;
+  max-width: 60ch;
   overflow-wrap: break-word;
 }
 

@@ -1,3 +1,8 @@
+- http://router-website-new-5d43.fly.dev.global.prod.fastly.net/
+- https://router-website-new-5d43.fly.dev
+
+---
+
 # Remix Indie Stack
 
 ![The Remix Indie Stack](https://repository-images.githubusercontent.com/465928257/a241fa49-bd4d-485a-a2a5-5cb8e4ee0abf)
