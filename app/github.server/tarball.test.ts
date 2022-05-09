@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { createTarFileProcessor } from "./tar.server";
+import { createTarFileProcessor } from "./tarball";
 
 describe("createTarFileProcessor", () => {
   it("extracts and processes files one-by-one", async () => {

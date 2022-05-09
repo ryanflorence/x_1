@@ -1,6 +1,6 @@
 import { getRepoContent } from "./repo-content";
 import { getRepoTarballStream } from "./repo-tarball";
-import { createTarFileProcessor } from "./tar.server";
+import { createTarFileProcessor } from "./tarball";
 import { processMarkdown } from "@ryanflorence/md";
 import LRUCache from "lru-cache";
 import parseYamlHeader from "gray-matter";
