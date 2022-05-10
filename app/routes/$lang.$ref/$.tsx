@@ -2,7 +2,7 @@ import type { LoaderFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import invariant from "tiny-invariant";
-import { getRepoDoc } from "~/github.server";
+import { getRepoDoc } from "~/gh-docs";
 
 // Keep it in the browser (and CDN) for 5 minutes so when they click
 // back/forward/etc. it's super fast, swr for 1 week on CDN so it stays fast but

@@ -2,8 +2,8 @@ import { json, redirect } from "@remix-run/node";
 import type { LoaderFunction } from "@remix-run/node";
 import { Link, Outlet, useLoaderData } from "@remix-run/react";
 import invariant from "tiny-invariant";
-import { getRepoDocsMenu, getRepoTags, validateParams } from "~/github.server";
-import type { MenuDoc } from "~/github.server";
+import { getRepoDocsMenu, getRepoTags, validateParams } from "~/gh-docs";
+import type { MenuDoc } from "~/gh-docs";
 import styles from "~/styles/docs.css";
 
 type LoaderData = {
