@@ -15,9 +15,9 @@ let tagsCache =
   // we need a better hot reload story here
   global.tagsCache ||
   (global.tagsCache = new LRUCache<string, string[]>({
-    max: 3,
+    max: 10,
+    ttl: 30000, // 5 minutes, so we can see new tags quickly
     allowStale: true,
-    ttl: 300, // 5 minutes, so we can see new tags quickly
     fetchMethod: async (key) => {
       let url = `https://api.github.com/repos/${key}/tags?per_page=100`;
       let res = await fetch(url);
