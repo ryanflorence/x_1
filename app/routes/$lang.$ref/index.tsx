@@ -10,9 +10,8 @@ type LoaderData = Doc;
 
 export let loader: LoaderFunction = async ({ params }) => {
   invariant(params.ref, "expected `ref` params");
-  invariant(params["*"], "expected splat param");
 
-  let doc = await getRepoDoc(params.ref, params["*"]);
+  let doc = await getRepoDoc(params.ref, "index");
   if (!doc) throw new Response("", { status: 404 });
 
   return json<Doc>(doc, {

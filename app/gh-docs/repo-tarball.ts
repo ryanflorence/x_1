@@ -48,13 +48,7 @@ export async function getLocalTarballStream(): Promise<NodeJS.ReadableStream> {
     process.env.LOCAL_REPO_RELATIVE_PATH,
     "docs"
   );
-  await tar.c(
-    {
-      gzip: true,
-      file: ".local.tgz",
-    },
-    [localDocsPath]
-  );
+  await tar.c({ gzip: true, file: ".local.tgz" }, [localDocsPath]);
   return fs.createReadStream(".local.tgz");
 }
 

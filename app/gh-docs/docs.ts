@@ -1,21 +1,22 @@
-import { getRepoContent } from "./repo-content";
-import { getRepoTarballStream } from "./repo-tarball";
-import { createTarFileProcessor } from "./tarball";
 import { processMarkdown } from "@ryanflorence/md";
 import LRUCache from "lru-cache";
 import parseYamlHeader from "gray-matter";
-// @ts-expect-error
-import sortBy from "sort-by";
+import invariant from "tiny-invariant";
+import path from "path";
+import { getRepoContent } from "./repo-content";
+import { getRepoTarballStream } from "./repo-tarball";
+import { createTarFileProcessor } from "./tarball";
 
 export interface MenuDoc {
-  filename: string;
-  slug: string;
-  hasContent: boolean;
   attrs: {
     title: string;
     order?: number;
     [key: string]: any;
   };
+  children: MenuDoc[];
+  filename: string;
+  hasContent: boolean;
+  slug: string;
 }
 
 export interface Doc extends Omit<MenuDoc, "hasContent"> {
@@ -36,31 +37,23 @@ let menuCache =
 
 export async function getMenu(
   repo: string,
-  refId: string,
+  ref: string,
   lang: string
 ): Promise<MenuDoc[]> {
-  let cacheKey = `${refId}:${lang}`;
+  let cacheKey = `${ref}:${lang}`;
   let cached = menuCache.get(cacheKey);
   if (cached) return cached;
 
-  let menu: MenuDoc[] = [];
+  let stream = await getRepoTarballStream(repo, ref);
+  let menu = await getMenuFromStream(stream);
 
-  let stream = await getRepoTarballStream(repo, refId);
-  let processFiles = createTarFileProcessor(stream);
-  await processFiles(async ({ filename, content }) => {
-    let { attrs, content: md } = parseAttrs(content, filename);
-    menu.push({
-      attrs,
-      filename,
-      slug: makeSlug(filename),
-      hasContent: md.length > 0,
-    });
-  });
-
-  menu.sort(sortBy("slug"));
   menuCache.set(cacheKey, menu);
-
   return menu;
+}
+
+// exported for testing
+export function sortMenu(docsArray: MenuDoc[]) {
+  return [{}];
 }
 
 function parseAttrs(md: string, filename: string) {
@@ -94,7 +87,7 @@ let docCache =
       let md = await getRepoContent(repo, ref, filename);
       let { content, attrs } = parseAttrs(md, filename);
       let html = await processMarkdown(content);
-      return { attrs, filename, html, slug };
+      return { attrs, filename, html, slug, children: [] };
     },
   }));
 
@@ -109,6 +102,46 @@ export async function getDoc(
 }
 
 /**
+ * Exported for unit tests
+ */
+export async function getMenuFromStream(stream: NodeJS.ReadableStream) {
+  let docs: MenuDoc[] = [];
+  let processFiles = createTarFileProcessor(stream);
+  await processFiles(async ({ filename, content }) => {
+    let { attrs, content: md } = parseAttrs(content, filename);
+    docs.push({
+      attrs,
+      filename,
+      slug: makeSlug(filename),
+      hasContent: md.length > 0,
+      children: [],
+    });
+  });
+
+  // sort so we can process parents before children
+  docs.sort((a, b) => (a.slug < b.slug ? -1 : a.slug > b.slug ? 1 : 0));
+
+  // construct the hierarchy
+  let tree: MenuDoc[] = [];
+  let map = new Map<string, MenuDoc>();
+  for (let doc of docs) {
+    let { slug } = doc;
+    let parentSlug = slug.substring(0, slug.lastIndexOf("/"));
+    map.set(slug, doc);
+
+    if (parentSlug) {
+      let parent = map.get(parentSlug);
+      invariant(parent, `Expected ${parentSlug} in tree`);
+      parent.children.push(doc);
+    } else {
+      tree.push(doc);
+    }
+  }
+
+  return tree;
+}
+
+/**
  * Removes the extension from markdown file names.
  */
 function makeSlug(docName: string): string {
@@ -116,5 +149,9 @@ function makeSlug(docName: string): string {
   // path in front of "docs/", so grab any of that stuff too. Maybe there's a
   // way to control the basename of files when we make the local tarball but I
   // dunno how to do that right now.
-  return docName.replace(/^(.+\/)?docs\//, "").replace(/\.md$/, "");
+  return docName
+    .replace(/^(.+\/)?docs\//, "")
+    .replace(/\.md$/, "")
+    .replace(/index$/, "")
+    .replace(/\/$/, "");
 }
