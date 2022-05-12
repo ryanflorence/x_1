@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
+html {
   --base00: theme("colors.gray.50");
   --base01: theme("colors.gray.200");
   --base02: theme("colors.gray.300");
@@ -21,24 +21,28 @@
   --base0F: theme("colors.gray.700");
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --base00: theme("colors.gray.800");
-    --base01: theme("colors.gray.700");
-    --base02: theme("colors.gray.600");
-    --base03: theme("colors.gray.500");
-    --base04: theme("colors.gray.400");
-    --base05: theme("colors.gray.300");
-    --base06: theme("colors.gray.200");
-    --base07: theme("colors.gray.100");
-    --base08: theme("colors.red.300");
-    --base09: theme("colors.pink.brand");
-    --base0A: theme("colors.blue.300");
-    --base0B: theme("colors.yellow.brand");
-    --base0C: theme("colors.aqua.300");
-    --base0D: theme("colors.blue.300");
-    --base0E: theme("colors.pink.300");
-    --base0F: theme("colors.gray.300");
+html.dark {
+  --base00: theme("colors.gray.800");
+  --base01: theme("colors.gray.700");
+  --base02: theme("colors.gray.600");
+  --base03: theme("colors.gray.500");
+  --base04: theme("colors.gray.400");
+  --base05: theme("colors.gray.300");
+  --base06: theme("colors.gray.200");
+  --base07: theme("colors.gray.100");
+  --base08: theme("colors.red.300");
+  --base09: theme("colors.pink.brand");
+  --base0A: theme("colors.blue.300");
+  --base0B: theme("colors.yellow.brand");
+  --base0C: theme("colors.aqua.300");
+  --base0D: theme("colors.blue.300");
+  --base0E: theme("colors.pink.300");
+  --base0F: theme("colors.gray.300");
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
   }
 }
 
@@ -52,8 +56,7 @@
 .md-prose {
   -ms-text-size-adjust: 100%;
   -webkit-text-size-adjust: 100%;
-  grid-area: main;
-  @apply min-w-0 flex-auto break-words text-d-p-sm leading-normal text-gray-700 dark:text-gray-300;
+  @apply break-words text-d-p-sm leading-normal text-gray-700 dark:text-gray-300;
 
   & > :first-child {
     @apply mt-0;
@@ -68,6 +71,13 @@
 
   & p {
     @apply mt-0 mb-4;
+  }
+
+  & p,
+  & ul,
+  & ol,
+  & blockquote {
+    @apply max-w-[60ch];
   }
 
   & strong {
@@ -179,11 +189,11 @@
   }
 
   & h1 {
-    @apply my-10 text-m-h1 font-black md:text-d-h1;
+    @apply my-10 text-m-h1 font-black dark:text-white md:text-d-h1;
   }
 
   & h2 {
-    @apply text-m-h2 font-bold text-gray-600 dark:text-gray-400 md:text-d-h2;
+    @apply text-m-h2 font-bold text-gray-600 dark:text-gray-50 md:text-d-h2;
   }
 
   & h3 {
@@ -264,7 +274,7 @@
   }
 
   & pre {
-    @apply mt-0 mb-4 bg-[color:var(--base00)] leading-relaxed;
+    @apply my-8 bg-[color:var(--base00)] leading-relaxed dark:border-gray-700;
   }
 
   & code,
@@ -418,7 +428,7 @@
   & docs-success,
   & docs-warning,
   & docs-error {
-    @apply relative mt-0 mb-3 block rounded-lg border-l-2 border-r-2 border-current px-4 py-2;
+    @apply relative my-8 block rounded-lg border-l-2 border-r-2 border-current px-4 py-2;
   }
 
   & docs-info::before,

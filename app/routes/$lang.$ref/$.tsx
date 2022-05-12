@@ -21,15 +21,24 @@ export let loader: LoaderFunction = async ({ params }) => {
 };
 
 export function headers() {
-  return { "Cache-Control": CACHE_CONTROL.doc };
+  return {
+    "Cache-Control": CACHE_CONTROL.doc,
+    // vary on cookie for dark mode, it's the same for everybody so it will
+    // still work out great, but if we ever have real users on this site it'll
+    // be a problem
+    Vary: "Cookie",
+  };
+}
+
+export function meta({ data }: { data?: LoaderData }) {
+  return {
+    title: data ? `${data.attrs.title} | React Router` : "React Router",
+  };
 }
 
 export default function DocPage() {
   let doc = useLoaderData<LoaderData>();
   return (
-    <div
-      className="markdown max-w-4xl px-3 py-8"
-      dangerouslySetInnerHTML={{ __html: doc.html }}
-    />
+    <div className="markdown" dangerouslySetInnerHTML={{ __html: doc.html }} />
   );
 }

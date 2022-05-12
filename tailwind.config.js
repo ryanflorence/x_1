@@ -7,7 +7,7 @@
 const defaultTheme = require("tailwindcss/defaultTheme");
 
 module.exports = {
-  mode: "jit",
+  darkMode: "class",
   content: ["./app/**/*.{ts,tsx}"],
   theme: {
     fontSize: {

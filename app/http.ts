@@ -1,3 +1,5 @@
+import { createCookie } from "@remix-run/node"; // or "@remix-run/cloudflare"
+
 export const CACHE_CONTROL = {
   /**
    * Keep it in the browser (and CDN) for 5 minutes so when they click
@@ -6,3 +8,15 @@ export const CACHE_CONTROL = {
    */
   doc: "max-age=300, stale-while-revalidate=604800",
 };
+
+let prefs = createCookie("user-prefs", { maxAge: 34560000 });
+
+export async function getPrefs(request: Request) {
+  const header = request.headers.get("Cookie");
+  const cookie = await prefs.parse(header);
+  return cookie || {};
+}
+
+export function serializePrefs(vals: any) {
+  return prefs.serialize(vals);
+}
