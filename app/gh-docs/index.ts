@@ -6,8 +6,8 @@ export { getRepoTarballStream } from "./repo-tarball";
 
 export type { MenuDoc, Doc } from "./docs";
 
-const REPO = process.env.GITHUB_REPO!;
-if (!REPO) throw new Error("Missing process.env.GITHUB_REPO");
+const REPO = process.env.SOURCE_REPO!;
+if (!REPO) throw new Error("Missing process.env.SOURCE_REPO");
 
 export function getRepoTags() {
   return getTags(REPO);
