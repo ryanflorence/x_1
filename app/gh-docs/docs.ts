@@ -43,7 +43,7 @@ export async function getMenu(
   let cached = menuCache.get(cacheKey);
   if (cached) return cached;
 
-  console.log("fetching");
+  console.log(`fetching menu: ${repo} ${ref}`);
   let stream = await getRepoTarballStream(repo, ref);
   let menu = await getMenuFromStream(stream);
 
