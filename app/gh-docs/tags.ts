@@ -1,4 +1,5 @@
 import LRUCache from "lru-cache";
+import { octokit } from "./github";
 
 /**
  * Fetches the repo tags
@@ -18,16 +19,14 @@ let tagsCache =
     max: 100,
     ttl: 30000, // 5 minutes, so we can see new tags quickly
     fetchMethod: async (key) => {
-      console.log("fetching tags", key);
-      let url = `https://api.github.com/repos/${key}/tags?per_page=100`;
-      let res = await fetch(url);
-      if (res.status !== 200) {
-        console.log(res.status, await res.text());
-        throw new Error(
-          "Could not fetch tags! Previous message is the github response."
-        );
-      }
-      let json = await res.json();
-      return json.map((tag: { name: string }) => tag.name);
+      console.log("Fetching fresh tags", key);
+      let [owner, repo] = key.split("/");
+      const { data } = await octokit.rest.repos.listTags({
+        mediaType: { format: "json" },
+        owner,
+        repo,
+        per_page: 100,
+      });
+      return data.map((tag: { name: string }) => tag.name);
     },
   }));

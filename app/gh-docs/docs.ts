@@ -24,7 +24,7 @@ export interface Doc extends Omit<MenuDoc, "hasContent"> {
 
 declare global {
   var menuCache: LRUCache<string, MenuDoc[]>;
-  var cache: LRUCache<string, Doc>;
+  var docCache: LRUCache<string, Doc>;
 }
 
 let menuCache =
@@ -43,7 +43,7 @@ export async function getMenu(
   let cached = menuCache.get(cacheKey);
   if (cached) return cached;
 
-  console.log(`fetching menu: ${repo} ${ref}`);
+  console.log(`Fetching fresh menu: ${repo} ${ref}`);
   let stream = await getRepoTarballStream(repo, ref);
   let menu = await getMenuFromStream(stream);
 
@@ -74,12 +74,12 @@ function parseAttrs(
  */
 let docCache =
   // we need a better hot reload story here
-  global.cache ||
-  (global.cache = new LRUCache<string, Doc>({
+  global.docCache ||
+  (global.docCache = new LRUCache<string, Doc>({
     max: 300,
     ttl: 300000,
     fetchMethod: async (key) => {
-      console.log("fetching doc", key);
+      console.log("Fetching fresh doc", key);
       let [repo, ref, slug] = key.split(":");
       let filename = `docs/${slug}.md`;
       let md = await getRepoContent(repo, ref, filename);
