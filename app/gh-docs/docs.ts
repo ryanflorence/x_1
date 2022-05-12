@@ -30,7 +30,8 @@ declare global {
 let menuCache =
   global.menuCache ||
   (global.menuCache = new LRUCache<string, MenuDoc[]>({
-    max: 30, // store up to 30 versions
+    max: 30,
+    ttl: 300000, // 5 minutes
   }));
 
 export async function getMenu(
@@ -42,6 +43,7 @@ export async function getMenu(
   let cached = menuCache.get(cacheKey);
   if (cached) return cached;
 
+  console.log("fetching");
   let stream = await getRepoTarballStream(repo, ref);
   let menu = await getMenuFromStream(stream);
 
@@ -74,8 +76,8 @@ let docCache =
   // we need a better hot reload story here
   global.cache ||
   (global.cache = new LRUCache<string, Doc>({
-    max: 500,
-    ttl: 300,
+    max: 300,
+    ttl: 300000,
     fetchMethod: async (key) => {
       console.log("fetching doc", key);
       let [repo, ref, slug] = key.split(":");

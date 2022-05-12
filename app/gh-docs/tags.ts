@@ -15,7 +15,7 @@ let tagsCache =
   // we need a better hot reload story here
   global.tagsCache ||
   (global.tagsCache = new LRUCache<string, string[]>({
-    max: 10,
+    max: 100,
     ttl: 30000, // 5 minutes, so we can see new tags quickly
     fetchMethod: async (key) => {
       console.log("fetching tags", key);
