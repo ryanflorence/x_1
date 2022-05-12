@@ -17,7 +17,10 @@ export async function getRepoContent(
   if (ref === "local") return getLocalContent(filepath);
   let url = `https://raw.githubusercontent.com/${repo}/${ref}/${filepath}`;
   let res = await fetch(url);
-  if (res.status !== 200) throw res;
+  if (res.status !== 200) {
+    console.log(res.status, await res.text());
+    throw new Error(`Could not fetch ${repo}/${ref}/${filepath}`);
+  }
   return res.text();
 }
 

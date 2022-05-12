@@ -145,7 +145,7 @@ function ColorSchemeToggle() {
   let colorScheme = useOptimisticColorScheme();
 
   return (
-    <Form method="post" className="flex items-center">
+    <Form replace={true} method="post" className="flex items-center">
       <input
         type="hidden"
         name="returnTo"

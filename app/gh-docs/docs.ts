@@ -28,7 +28,6 @@ declare global {
 }
 
 let menuCache =
-  // we need a better hot reload story here
   global.menuCache ||
   (global.menuCache = new LRUCache<string, MenuDoc[]>({
     max: 30, // store up to 30 versions
@@ -77,8 +76,8 @@ let docCache =
   (global.cache = new LRUCache<string, Doc>({
     max: 500,
     ttl: 300,
-    allowStale: true,
     fetchMethod: async (key) => {
+      console.log("fetching doc", key);
       let [repo, ref, slug] = key.split(":");
       let filename = `docs/${slug}.md`;
       let md = await getRepoContent(repo, ref, filename);
