@@ -14,7 +14,7 @@ export async function getRepoContent(
   repoPair: string,
   ref: string,
   filepath: string
-) {
+): Promise<string> {
   if (ref === "local") return getLocalContent(filepath);
   let [owner, repo] = repoPair.split("/");
   const { data } = await octokit.rest.repos.getContent({
@@ -24,6 +24,9 @@ export async function getRepoContent(
     path: filepath,
     ref,
   });
+
+  // @ts-expect-error - `format: raw` returns a string but the type doesn't know
+  // that.
   return data;
 }
 

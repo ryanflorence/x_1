@@ -1,3 +1,8 @@
+## Development
+
+- Just need some envars
+- There are a couple LRUCache's for talking to github and processing markdown, they expire after 5 minutes
+
 - http://router-website-new-5d43.fly.dev.global.prod.fastly.net/
 - https://router-website-new-5d43.fly.dev
 
