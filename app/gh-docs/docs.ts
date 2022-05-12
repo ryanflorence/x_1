@@ -131,7 +131,7 @@ export async function getMenuFromStream(stream: NodeJS.ReadableStream) {
   let tree: MenuDoc[] = [];
   let map = new Map<string, MenuDoc>();
   for (let doc of docs) {
-    let { slug, attrs } = doc;
+    let { slug } = doc;
 
     let parentSlug = slug.substring(0, slug.lastIndexOf("/"));
     map.set(slug, doc);
@@ -145,10 +145,14 @@ export async function getMenuFromStream(stream: NodeJS.ReadableStream) {
     }
   }
 
-  // sort them all
-  tree.sort(
-    (a, b) => (a.attrs.order || Infinity) - (b.attrs.order || Infinity)
-  );
+  let sortDocs = (a: MenuDoc, b: MenuDoc) =>
+    (a.attrs.order || Infinity) - (b.attrs.order || Infinity);
+
+  // sort the parents and children
+  tree.sort(sortDocs);
+  for (let category of tree) {
+    category.children.sort(sortDocs);
+  }
 
   return tree;
 }

@@ -18,8 +18,8 @@ describe("getMenuFromStream", () => {
 
     expect(menu[1].children.length).toBe(2);
     expect(menu[1].slug).toBe("pages");
-    expect(menu[1].children[0].attrs.title).toBe("Overview");
-    expect(menu[1].children[0].slug).toBe("pages/overview");
+    expect(menu[1].children[0].attrs.title).toBe("Quickstart Tutorial");
+    expect(menu[1].children[0].slug).toBe("pages/tutorial");
   });
 });
 
