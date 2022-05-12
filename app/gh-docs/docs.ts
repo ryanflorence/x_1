@@ -2,7 +2,6 @@ import { processMarkdown } from "@ryanflorence/md";
 import LRUCache from "lru-cache";
 import parseYamlHeader from "gray-matter";
 import invariant from "tiny-invariant";
-import path from "path";
 import { getRepoContent } from "./repo-content";
 import { getRepoTarballStream } from "./repo-tarball";
 import { createTarFileProcessor } from "./tarball";
@@ -51,12 +50,10 @@ export async function getMenu(
   return menu;
 }
 
-// exported for testing
-export function sortMenu(docsArray: MenuDoc[]) {
-  return [{}];
-}
-
-function parseAttrs(md: string, filename: string) {
+function parseAttrs(
+  md: string,
+  filename: string
+): { content: string; attrs: Doc["attrs"] } {
   let { data, content } = parseYamlHeader(md);
   return {
     content,
@@ -109,6 +106,14 @@ export async function getMenuFromStream(stream: NodeJS.ReadableStream) {
   let processFiles = createTarFileProcessor(stream);
   await processFiles(async ({ filename, content }) => {
     let { attrs, content: md } = parseAttrs(content, filename);
+    let slug = makeSlug(filename);
+
+    // don't need docs/index.md in the menu
+    if (slug === "") return;
+
+    // can have docs not in the menu
+    if (attrs.hidden) return;
+
     docs.push({
       attrs,
       filename,
@@ -125,7 +130,8 @@ export async function getMenuFromStream(stream: NodeJS.ReadableStream) {
   let tree: MenuDoc[] = [];
   let map = new Map<string, MenuDoc>();
   for (let doc of docs) {
-    let { slug } = doc;
+    let { slug, attrs } = doc;
+
     let parentSlug = slug.substring(0, slug.lastIndexOf("/"));
     map.set(slug, doc);
 
@@ -137,6 +143,11 @@ export async function getMenuFromStream(stream: NodeJS.ReadableStream) {
       tree.push(doc);
     }
   }
+
+  // sort them all
+  tree.sort(
+    (a, b) => (a.attrs.order || Infinity) - (b.attrs.order || Infinity)
+  );
 
   return tree;
 }

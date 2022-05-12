@@ -44,9 +44,9 @@
 
 ._no-triangle::-webkit-details-marker {
   display: none;
-}
-._no-triangle {
-  list-style-type: none;
+  &::-webkit-details-marker {
+    list-style-type: none;
+  }
 }
 
 .md-prose {

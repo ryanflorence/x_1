@@ -1,18 +1,21 @@
 import { json, redirect } from "@remix-run/node";
 import type { LoaderFunction } from "@remix-run/node";
-import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
+import * as React from "react";
 import {
   Link,
   Outlet,
   useLoaderData,
   useLocation,
   useMatches,
+  useTransition,
 } from "@remix-run/react";
 import invariant from "tiny-invariant";
 import { getRepoDocsMenu, getRepoTags, validateParams } from "~/gh-docs";
 import type { MenuDoc } from "~/gh-docs";
 import iconsHref from "~/icons.svg";
+import { matchPath, useResolvedPath } from "react-router";
+import classNames from "classnames";
+import { DetailsMenu } from "~/details-menu";
 
 type LoaderData = {
   menu: MenuDoc[];
@@ -106,25 +109,11 @@ function Header() {
 }
 
 function Breadcrumbs() {
-  let [isOpen, setIsOpen] = useState(false);
-  let location = useLocation();
   let doc = useMatches().slice(-1)[0].data;
   invariant(doc, "expected child match for the doc");
 
-  useEffect(
-    () => {
-      if (isOpen) setIsOpen(false);
-    },
-    // eslint-disable-next-line
-    [location]
-  );
-
   return (
-    <details
-      open={isOpen}
-      onToggle={(e) => setIsOpen(e.currentTarget.open)}
-      className="group relative flex h-full flex-col"
-    >
+    <DetailsMenu className="group relative flex h-full flex-col">
       <summary className="_no-triangle flex cursor-pointer select-none items-center gap-2 border-b border-gray-200 bg-white bg-opacity-75 px-2 py-3 text-sm font-medium backdrop-blur hover:bg-gray-50 active:bg-white">
         <div className="flex items-center gap-2">
           <svg aria-hidden className="h-5 w-5 group-open:hidden">
@@ -139,7 +128,7 @@ function Breadcrumbs() {
       <div className="absolute h-[70vh] w-full overflow-auto overscroll-contain bg-white p-3 shadow-xl">
         <Menu />
       </div>
-    </details>
+    </DetailsMenu>
   );
 }
 
@@ -150,7 +139,7 @@ function HeaderLink({
 }: {
   href: string;
   className?: string;
-  children: ReactNode;
+  children: React.ReactNode;
 }) {
   return (
     <a
@@ -164,39 +153,13 @@ function HeaderLink({
 function VersionSelect() {
   let { versions, branches, currentGitHubRef, lang } =
     useLoaderData<LoaderData>();
-  let [isOpen, setIsOpen] = useState(false);
-  let location = useLocation();
-
-  useEffect(
-    () => {
-      if (isOpen) setIsOpen(false);
-    },
-    // eslint-disable-next-line
-    [location]
-  );
 
   return (
-    <details
-      open={isOpen}
-      onToggle={(e) => {
-        let open = e.currentTarget.open;
-        setIsOpen(open);
-      }}
-      onBlur={(e) => {
-        // capture because react cleans up the event
-        let me = e.currentTarget;
-        // let focus rest
-        requestAnimationFrame(() => {
-          let maybeMe = document.activeElement?.closest("details");
-          let activeElementIsMeOrMyPosterity = maybeMe === me;
-          if (!activeElementIsMeOrMyPosterity) setIsOpen(false);
-        });
-      }}
-    >
+    <DetailsMenu>
       <summary className="_no-triangle relative flex cursor-pointer list-none items-center justify-center gap-1 rounded-full bg-gray-800 px-3 py-2 text-center text-xs font-medium text-gray-200 hover:bg-gray-700">
         <div>{currentGitHubRef}</div>
         <svg aria-hidden className="h-3 w-3">
-          <use href={`${iconsHref}#chevron-d`} />
+          <use href={`${iconsHref}#triangle-d`} />
         </svg>
       </summary>
       <div className="absolute z-10">
@@ -222,7 +185,7 @@ function VersionSelect() {
           </div>
         </div>
       </div>
-    </details>
+    </DetailsMenu>
   );
 }
 
@@ -233,7 +196,13 @@ function VersionsLabel({ label }: { label: string }) {
     </div>
   );
 }
-function VersionLink({ to, children }: { to: string; children: ReactNode }) {
+function VersionLink({
+  to,
+  children,
+}: {
+  to: string;
+  children: React.ReactNode;
+}) {
   return (
     <Link
       className="block font-medium text-gray-100 hover:underline"
@@ -243,20 +212,45 @@ function VersionLink({ to, children }: { to: string; children: ReactNode }) {
   );
 }
 
+function MenuLink({ to, children }: { to: string; children: React.ReactNode }) {
+  let { pathname } = useResolvedPath(to);
+  let navigation = useTransition();
+  let location = useLocation();
+  let match = matchPath(pathname, (navigation.location || location).pathname);
+  return (
+    <Link to={to} className="flex items-center py-2">
+      <div
+        className={classNames(
+          "h-1 w-2 rounded-full",
+          match ? "bg-red-brand" : "bg-transparent"
+        )}
+      />
+      <div
+        className={classNames(
+          "pl-2",
+          match ? "font-bold text-red-brand" : "text-gray-600"
+        )}
+        children={children}
+      />
+    </Link>
+  );
+}
+
 function Menu() {
-  let data = useLoaderData<LoaderData>();
+  let { menu } = useLoaderData<LoaderData>();
   return (
     <nav>
       <ul>
-        {data.menu.map((doc, index) => (
-          <li key={index}>
-            {doc.hasContent ? (
-              <Link className="block py-2 text-blue-500" to={doc.slug}>
+        {menu.map((category) => (
+          <li key={category.attrs.title} className="mb-6">
+            <div className="block py-2 text-sm font-bold uppercase text-black">
+              {category.attrs.title}
+            </div>
+            {category.children.map((doc) => (
+              <MenuLink key={doc.slug} to={doc.slug}>
                 {doc.attrs.title}
-              </Link>
-            ) : (
-              <span className="block">{doc.attrs.title}</span>
-            )}
+              </MenuLink>
+            ))}
           </li>
         ))}
       </ul>
