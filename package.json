@@ -6,7 +6,7 @@
   "sideEffects": false,
   "scripts": {
     "build": "run-s build:*",
-    "build:css": "npm run generate:css -- --minify",
+    "build:css": "npm run generate:css",
     "build:remix": "remix build",
     "dev": "run-p dev:*",
     "dev:css": "npm run generate:css -- --watch",
@@ -78,6 +78,7 @@
     "binode": "^1.0.5",
     "c8": "^7.11.0",
     "cross-env": "^7.0.3",
+    "cssnano": "^5.1.7",
     "cypress": "^9.5.3",
     "eslint": "^8.12.0",
     "eslint-config-prettier": "^8.5.0",
