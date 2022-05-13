@@ -39,10 +39,11 @@ export function headers() {
 export function meta({ data }: { data?: LoaderData }) {
   invariant(data, `expected loader data for meta tags`);
   let { doc, isProductionApp } = data;
+  let title = doc.attrs.title + " | React Router";
   let [meta] = seo({
-    title: doc.attrs.title,
-    twitter: { title: doc.attrs.title },
-    openGraph: { title: doc.attrs.title },
+    title: title,
+    twitter: { title },
+    openGraph: { title },
     robots: { noindex: !isProductionApp },
   });
   return meta;
