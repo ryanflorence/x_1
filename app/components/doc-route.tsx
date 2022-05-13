@@ -41,6 +41,8 @@ export function meta({ data }: { data?: LoaderData }) {
   let { doc, isProductionApp } = data;
   let [meta] = seo({
     title: doc.attrs.title,
+    twitter: { title: doc.attrs.title },
+    openGraph: { title: doc.attrs.title },
     robots: { noindex: !isProductionApp },
   });
   return meta;
