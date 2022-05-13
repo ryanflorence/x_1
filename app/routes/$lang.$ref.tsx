@@ -76,7 +76,8 @@ export function headers() {
 }
 
 export default function DocsLayout() {
-  let navigating = Boolean(useTransition().location);
+  let navigation = useTransition();
+  let navigating = navigation.location && !navigation.submission;
 
   return (
     <div className="lg:m-auto lg:max-w-6xl">
@@ -89,7 +90,7 @@ export default function DocsLayout() {
         <div
           className={classNames(
             "min-h-[80vh]",
-            navigating ? "opacity-25 transition-opacity delay-500" : ""
+            navigating ? "opacity-25 transition-opacity delay-300" : ""
           )}
         >
           <Outlet />
