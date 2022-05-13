@@ -310,6 +310,7 @@ function MenuLink({ to, children }: { to: string; children: React.ReactNode }) {
 
   return (
     <Link
+      prefetch="intent"
       to={to}
       className={classNames(
         // link styles
