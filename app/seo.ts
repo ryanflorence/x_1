@@ -18,7 +18,7 @@ export const seo = getSeo({
   openGraph: {
     images: [
       {
-        url: "/ogimage.jpg",
+        url: "/ogimage.png",
         alt: "React Router logo",
         height: 627,
         width: 1200,
