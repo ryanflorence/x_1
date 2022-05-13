@@ -89,7 +89,7 @@ export default function DocsLayout() {
         <div
           className={classNames(
             "min-h-[80vh]",
-            navigating ? "opacity-25 transition-opacity delay-200" : ""
+            navigating ? "opacity-25 transition-opacity delay-500" : ""
           )}
         >
           <Outlet />
