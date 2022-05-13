@@ -14,7 +14,6 @@ export let loader: LoaderFunction = async ({ params, request }) => {
 
   let doc = await getRepoDoc(params.ref, params["*"] || "index");
   if (!doc) throw new Response("", { status: 404 });
-  console.log(doc.attrs.title);
 
   // Would rather do this once in root.tsx but `seo` is kinda funny, need to
   // think about it a bit, but I'm thinking it shouldn't automatically add

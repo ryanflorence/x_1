@@ -76,6 +76,8 @@ export function headers() {
 }
 
 export default function DocsLayout() {
+  let navigating = Boolean(useTransition().location);
+
   return (
     <div className="lg:m-auto lg:max-w-6xl">
       <div className="sticky top-0 z-20">
@@ -84,7 +86,12 @@ export default function DocsLayout() {
       </div>
       <NavMenuDesktop />
       <div className="px-4 py-8 lg:ml-72 lg:px-8">
-        <div className="min-h-[80vh]">
+        <div
+          className={classNames(
+            "min-h-[80vh]",
+            navigating ? "opacity-25 transition-opacity delay-200" : ""
+          )}
+        >
           <Outlet />
         </div>
         <Footer />
@@ -348,15 +355,15 @@ function Footer() {
   let editUrl = `${repoUrl}/edit/main/docs/${doc.slug}.md`;
   return (
     <div className="mt-16 flex justify-between border-t pt-4 text-sm text-gray-500 dark:border-gray-600">
-      <div className="flex items-center">
+      <div className="lg:flex lg:items-center">
         <div className="pr-4">
           &copy;{" "}
           <a className="hover:underline" href="https://remix.run">
             Remix Software, Inc.
           </a>
         </div>
-        <div>•</div>
-        <div className="pl-4">
+        <div className="hidden lg:block">•</div>
+        <div className="lg:pl-4">
           Docs and examples{" "}
           <a
             className="hover:underline"
