@@ -188,3 +188,5 @@ We use [Prettier](https://prettier.io/) for auto-formatting in this project. It'
 - Handle translations
 - Allow links to link to ".md" so code completiong, clicking around is easy (sorry, this is a stupid @ryanflorence/md thing.)
   - Create @remix-run/md for our websites
+- parse out descriptions in @remix-run/md and add to seo
+- create resource route so the og:image is the first code block of the doc (with syntax highlighting!)

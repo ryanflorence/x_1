@@ -11,7 +11,7 @@ import {
   useTransition,
 } from "@remix-run/react";
 import invariant from "tiny-invariant";
-import { matchPath, useResolvedPath } from "react-router";
+import { matchPath, useResolvedPath } from "react-router-dom";
 import classNames from "classnames";
 import { getRepoDocsMenu, getRepoTags, validateParams } from "~/gh-docs";
 import type { MenuDoc } from "~/gh-docs";
@@ -27,28 +27,6 @@ type LoaderData = {
   lang: string;
   currentGitHubRef: string;
 };
-
-export default function Doc() {
-  return (
-    <div className="lg:m-auto lg:max-w-6xl">
-      <div className="sticky top-0 z-20">
-        <Header />
-        <NavMenuMobile />
-      </div>
-      <NavMenuDesktop />
-      <div className="px-4 py-8 lg:ml-64 lg:px-8">
-        <div className="min-h-[80vh]">
-          <Outlet />
-        </div>
-        <Footer />
-      </div>
-    </div>
-  );
-}
-
-export function headers() {
-  return { "Cache-Control": "max-age=300" };
-}
 
 export let action: ActionFunction = async ({ params, request }) => {
   let prefs = await getPrefs(request);
@@ -92,6 +70,28 @@ export let loader: LoaderFunction = async ({ params, request }) => {
     lang,
   });
 };
+
+export function headers() {
+  return { "Cache-Control": "max-age=300" };
+}
+
+export default function DocsLayout() {
+  return (
+    <div className="lg:m-auto lg:max-w-6xl">
+      <div className="sticky top-0 z-20">
+        <Header />
+        <NavMenuMobile />
+      </div>
+      <NavMenuDesktop />
+      <div className="px-4 py-8 lg:ml-72 lg:px-8">
+        <div className="min-h-[80vh]">
+          <Outlet />
+        </div>
+        <Footer />
+      </div>
+    </div>
+  );
+}
 
 function Header() {
   return (
@@ -191,16 +191,16 @@ function HeaderLink({
 
 function NavMenuDesktop() {
   return (
-    <div className="fixed top-16 bottom-0 hidden w-64 overflow-auto p-8 lg:block">
+    <div className="fixed top-16 bottom-0 hidden w-72 overflow-auto p-8 lg:block">
       <Menu />
     </div>
   );
 }
 
 function useDoc() {
-  let doc = useMatches().slice(-1)[0].data;
-  invariant(doc, "expected child match for the doc");
-  return doc;
+  let data = useMatches().slice(-1)[0].data;
+  invariant(data, "expected child match for the doc");
+  return data.doc;
 }
 
 function NavMenuMobile() {

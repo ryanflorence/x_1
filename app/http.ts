@@ -9,7 +9,7 @@ export const CACHE_CONTROL = {
   doc: "max-age=300, stale-while-revalidate=604800",
 };
 
-let prefs = createCookie("user-prefs", { maxAge: 34560000 });
+let prefs = createCookie("user-prefs", { maxAge: 34560000, sameSite: "lax" });
 
 export async function getPrefs(request: Request) {
   const header = request.headers.get("Cookie");
@@ -19,4 +19,8 @@ export async function getPrefs(request: Request) {
 
 export function serializePrefs(vals: any) {
   return prefs.serialize(vals);
+}
+
+export function isProductionHost(request: Request) {
+  return "reactrouter.com" === request.headers.get("host");
 }
