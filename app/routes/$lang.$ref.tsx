@@ -1,5 +1,5 @@
-import { ActionFunction, json, redirect } from "@remix-run/node";
-import type { LoaderFunction } from "@remix-run/node";
+import { json, redirect } from "@remix-run/node";
+import type { ActionFunction, LoaderFunction } from "@remix-run/node";
 import * as React from "react";
 import {
   Form,
@@ -11,11 +11,11 @@ import {
   useTransition,
 } from "@remix-run/react";
 import invariant from "tiny-invariant";
+import { matchPath, useResolvedPath } from "react-router";
+import classNames from "classnames";
 import { getRepoDocsMenu, getRepoTags, validateParams } from "~/gh-docs";
 import type { MenuDoc } from "~/gh-docs";
 import iconsHref from "~/icons.svg";
-import { matchPath, useResolvedPath } from "react-router";
-import classNames from "classnames";
 import { DetailsMenu } from "~/components/details-menu";
 import { getPrefs, serializePrefs } from "~/http";
 import { useOptimisticColorScheme } from "~/components/color-scheme";
@@ -35,14 +35,12 @@ export default function Doc() {
         <Header />
         <NavMenuMobile />
       </div>
-      <div className="lg:flex">
-        <NavMenuDesktop />
-        <div className="px-4 py-8 lg:ml-64 lg:flex-1 lg:px-8">
-          <div className="min-h-[80vh]">
-            <Outlet />
-          </div>
-          <Footer />
+      <NavMenuDesktop />
+      <div className="px-4 py-8 lg:ml-64 lg:px-8">
+        <div className="min-h-[80vh]">
+          <Outlet />
         </div>
+        <Footer />
       </div>
     </div>
   );
