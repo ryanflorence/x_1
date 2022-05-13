@@ -1,4 +1,4 @@
-import { createCookie } from "@remix-run/node"; // or "@remix-run/cloudflare"
+import { createCookie } from "@remix-run/node";
 
 export const CACHE_CONTROL = {
   /**
